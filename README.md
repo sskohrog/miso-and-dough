@@ -28,7 +28,7 @@ service cloud.firestore {
       allow read: if true;
       allow write: if request.auth != null;
     }
-    match /bakeryInfo/{doc} {
+    match /info/{doc} {
       allow read: if true;
       allow write: if request.auth != null;
     }
@@ -55,9 +55,9 @@ Add these documents (Document ID = field shown):
 |--------|------|-------|-------------|---------|-------|
 | `classic_sourdough` | Classic Sourdough Batard | 14 | | true | 1 |
 | `cheddar_jalapeno` | Cheddar Jalapeño Batard | 17 | | true | 2 |
-| `cinnamon_roll_focaccia` | Cinnamon Roll Focaccia Square w/ Cream Cheese Glaze | 7 | $7/square or $25/sheet (4 squares) | true | 3 |
+| `cinnamon_roll_focaccia` | Cinnamon Roll Focaccia w/ Cream Cheese Glaze | 7 | $7/square or $25/sheet (4 squares) | true | 3 |
 
-Also create collection `bakeryInfo`, document `about`:
+Also create collection `info`, document `about`:
 - `description`: your bakery description
 - `orderDeadline`: e.g. "Orders open until Thursday!"
 - `pickupInfo`: e.g. "Pick up Sunday 11-3"
@@ -130,7 +130,7 @@ Open [http://localhost:5173](http://localhost:5173)
 
 The sheet will have these headers (created by `setupHeaders()`):
 
-`OrderDate` | `Name` | `Phone` | `Email` | `Classic Sourdough Batard (qty)` | `Cheddar Jalapeño Batard (qty)` | `Cinnamon Roll Focaccia Square w/ Cream Cheese Glaze (qty)` | `PickUpDate` | `Status` | `TotalCost` | `ActualPayment`
+`OrderDate` | `Name` | `Phone` | `Email` | `Classic Sourdough Batard (qty)` | `Cheddar Jalapeño Batard (qty)` | `Cinnamon Roll Focaccia w/ Cream Cheese Glaze (qty)` | `PickUpDate` | `Status` | `TotalCost` | `ActualPayment`
 
 **ActualPayment** is filled in manually (either in the sheet or in the admin orders tab).
 

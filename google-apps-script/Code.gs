@@ -17,8 +17,10 @@ var ITEM_NAMES = [
   'Classic Sourdough Batard',
   'Cheddar Jalapeño Batard',
   'Cheddar Batard',
-  'Sesame Focaccia',
-  'Cinnamon Roll Focaccia Square w/ Cream Cheese Glaze',
+  'Sesame Focaccia — Whole Sheet',
+  'Sesame Focaccia — Half Sheet',
+  'Cinnamon Roll Focaccia w/ Cream Cheese Glaze — Whole Sheet (4 squares)',
+  'Cinnamon Roll Focaccia w/ Cream Cheese Glaze — 1 Square',
 ];
 
 function setupHeaders() {

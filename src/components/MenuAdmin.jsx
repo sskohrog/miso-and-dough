@@ -3,15 +3,12 @@ import {
   collection,
   doc,
   setDoc,
-  addDoc,
   updateDoc,
   deleteDoc,
   onSnapshot,
   query,
   orderBy,
-  Timestamp,
 } from 'firebase/firestore';
-import { signOut } from 'firebase/auth';
 import { db, auth } from '../firebase';
 import { useMenu, useBakeryInfo } from '../hooks/useMenu';
 
@@ -33,7 +30,13 @@ function MenuItemRow({ item, onSave, onDelete }) {
 
   async function handleSave() {
     setSaving(true);
-    await onSave({ ...draft, price: parseFloat(draft.price) || 0 });
+    const toSave = { ...draft };
+    if (toSave.variants?.length) {
+      toSave.variants = toSave.variants.map((v) => ({ ...v, price: parseFloat(v.price) || 0 }));
+    } else {
+      toSave.price = parseFloat(toSave.price) || 0;
+    }
+    await onSave(toSave);
     setSaving(false);
     setEditing(false);
   }
@@ -43,7 +46,15 @@ function MenuItemRow({ item, onSave, onDelete }) {
       <div className={`menu-row ${!item.enabled ? 'menu-row--disabled' : ''}`}>
         <div className="menu-row-info">
           <span className="menu-row-name">{item.name}</span>
-          <span className="menu-row-price">${item.price}</span>
+          {item.variants?.length ? (
+            <div className="menu-row-variants">
+              {item.variants.map((v, i) => (
+                <span key={i} className="menu-row-variant">{v.label} — ${v.price}</span>
+              ))}
+            </div>
+          ) : (
+            <span className="menu-row-price">${item.price}</span>
+          )}
           {item.description && (
             <span className="menu-row-desc">{item.description}</span>
           )}
@@ -68,13 +79,49 @@ function MenuItemRow({ item, onSave, onDelete }) {
           <label>Item Name</label>
           <input name="name" value={draft.name} onChange={handleChange} />
         </div>
-        <div className="field-group">
-          <label>Price ($)</label>
-          <input name="price" type="number" step="0.01" min="0" value={draft.price} onChange={handleChange} />
-        </div>
+        {!draft.variants?.length && (
+          <div className="field-group">
+            <label>Price ($)</label>
+            <input name="price" type="number" step="0.01" min="0" value={draft.price ?? ''} onChange={handleChange} />
+          </div>
+        )}
         <div className="field-group field-group--full">
           <label>Description / Notes</label>
-          <input name="description" value={draft.description || ''} onChange={handleChange} placeholder="e.g. $7/square or $25/sheet (4 squares)" />
+          <input name="description" value={draft.description || ''} onChange={handleChange} placeholder="Optional" />
+        </div>
+        <div className="field-group field-group--full">
+          <label>Size Variants {!draft.variants?.length && <span className="field-hint">(leave empty for a single price above)</span>}</label>
+          {(draft.variants || []).map((v, i) => (
+            <div key={i} className="variant-edit-row">
+              <input
+                value={v.label}
+                onChange={(e) => {
+                  const variants = [...draft.variants];
+                  variants[i] = { ...variants[i], label: e.target.value };
+                  setDraft((prev) => ({ ...prev, variants }));
+                }}
+                placeholder="Size label (e.g. Whole Sheet)"
+              />
+              <input
+                type="number" step="0.01" min="0"
+                value={v.price}
+                onChange={(e) => {
+                  const variants = [...draft.variants];
+                  variants[i] = { ...variants[i], price: parseFloat(e.target.value) || 0 };
+                  setDraft((prev) => ({ ...prev, variants }));
+                }}
+                placeholder="Price"
+              />
+              <button
+                type="button" className="btn-danger btn-sm"
+                onClick={() => setDraft((prev) => ({ ...prev, variants: prev.variants.filter((_, j) => j !== i) }))}
+              >×</button>
+            </div>
+          ))}
+          <button
+            type="button" className="btn-secondary btn-sm"
+            onClick={() => setDraft((prev) => ({ ...prev, variants: [...(prev.variants || []), { label: '', price: 0 }] }))}
+          >+ Add Size Variant</button>
         </div>
         <div className="field-group">
           <label>
@@ -146,10 +193,6 @@ function BakeryInfoEditor({ info }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  useEffect(() => {
-    if (info) setDraft(info);
-  }, [info]);
-
   function handleChange(e) {
     setDraft((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
@@ -166,7 +209,7 @@ function BakeryInfoEditor({ info }) {
 
   async function handleSave() {
     setSaving(true);
-    await setDoc(doc(db, 'bakeryInfo', 'about'), draft, { merge: true });
+    await setDoc(doc(db, 'info', 'about'), draft, { merge: true });
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -326,12 +369,7 @@ export default function MenuAdmin() {
 
   return (
     <div className="admin-panel">
-      <div className="admin-header">
-        <h1>Admin Panel</h1>
-        <button className="btn-secondary btn-sm" onClick={() => signOut(auth)}>
-          Sign Out
-        </button>
-      </div>
+      <h1 style={{marginBottom: 10}}>Admin Panel</h1>
 
       <div className="tab-bar">
         {['menu', 'info', 'orders'].map((t) => (
@@ -372,7 +410,7 @@ export default function MenuAdmin() {
           {infoLoading ? (
             <p className="loading-text">Loading…</p>
           ) : (
-            <BakeryInfoEditor info={info} />
+            <BakeryInfoEditor key={info ? 'loaded' : 'empty'} info={info} />
           )}
         </div>
       )}

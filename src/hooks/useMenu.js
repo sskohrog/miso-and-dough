@@ -32,7 +32,7 @@ export function useBakeryInfo() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsub = onSnapshot(doc(db, 'bakeryInfo', 'about'), (snap) => {
+    const unsub = onSnapshot(doc(db, 'info', 'about'), (snap) => {
       setInfo(snap.exists() ? snap.data() : null);
       setLoading(false);
     });
