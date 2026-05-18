@@ -7,7 +7,7 @@ import MenuAdmin from "./components/MenuAdmin";
 import AdminLogin from "./components/AdminLogin";
 import "./App.css";
 
-function AdminRoute(user) {
+function AdminRoute({ user: user }) {
   if (user === undefined)
     return (
       <div className="page-center">
